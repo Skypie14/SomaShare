@@ -18,7 +18,8 @@ builder.Services.AddControllersWithViews();
 
 // Register DbContext configure SQL Server connection
 builder.Services.AddDbContext<SomaContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"), sqlOptions =>
+        sqlOptions.EnableRetryOnFailure()));
 
 // Register DbContext Factory
 builder.Services.AddScoped<IDbContextFactory<SomaContext>>(provider =>
@@ -33,6 +34,7 @@ builder.Services.AddScoped<ISearchService, SearchService>();
 builder.Services.AddScoped<IWantedAdService, WantedAdService>();
 builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 // Add SignalR for real-time communication (chat)
 builder.Services.AddSignalR();

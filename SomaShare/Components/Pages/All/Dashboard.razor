@@ -13,7 +13,7 @@
 <!-- Create Listing -->
 <div class="card p-3 mb-4">
     <h4>Create a Listing</h4>
-    <EditForm Model="@newListing" OnValidSubmit="CreateListing">
+    <EditForm Model="@newListing" FormName="CreateListingForm" OnValidSubmit="CreateListing">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
