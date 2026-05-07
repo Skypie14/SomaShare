@@ -1,0 +1,370 @@
+﻿@page "/offers/{listingId:int}"
+@rendermode InteractiveServer
+@using SomaShare.Components.Model
+@using SomaShare.Services
+@using Microsoft.AspNetCore.Components
+@using Microsoft.EntityFrameworkCore
+
+@inject IOfferService OfferService
+@inject ITransactionService TransactionService
+@inject IListingService ListingService
+@inject SomaContext Context
+@inject NavigationManager NavManager
+@inject UserSession session
+
+<PageTitle>Manage Offers - SomaShare</PageTitle>
+
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            @if (loading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3">Loading offers...</p>
+                </div>
+            }
+            else if (listing == null)
+            {
+                <div class="alert alert-danger">
+                    <h4>Listing Not Found</h4>
+                    <p>This listing does not exist or you don't have permission to view it.</p>
+                    <button class="btn btn-primary" @onclick="GoBack">Go Back</button>
+                </div>
+            }
+            else
+            {
+                <!-- Listing Header -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Offers for: @listing.Textbook.Title</h4>
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Author:</strong> @listing.Textbook.Author</p>
+                        <p><strong>Price:</strong> <span class="text-success font-weight-bold">$@listing.Price.ToString("F2")</span></p>
+                        <p><strong>Condition:</strong> @listing.Condition</p>
+                    </div>
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        @errorMessage
+                        <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(successMessage))
+                {
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        @successMessage
+                        <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
+                    </div>
+                }
+
+                @if (offers == null || offers.Count == 0)
+                {
+                    <div class="alert alert-info">
+                        <h5>No Offers Yet</h5>
+                        <p>You haven't received any offers for this listing yet.</p>
+                    </div>
+                }
+                else
+                {
+                    <!-- Pending Offers -->
+                    @if (GetPendingOffers().Count > 0)
+                    {
+                        <div class="mb-4">
+                            <h5 class="text-warning mb-3">
+                                <span class="badge bg-warning">@GetPendingOffers().Count</span> Pending Offers
+                            </h5>
+
+                            @foreach (var offer in GetPendingOffers())
+                            {
+                                <div class="card mb-3 border-warning">
+                                    <div class="card-header bg-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <h6 class="mb-0">Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6>
+                                                <small class="text-muted">@offer.DateCreated.ToString("MMM dd, yyyy HH:mm")</small>
+                                            </div>
+                                            <div class="col-md-6 text-end">
+                                                <span class="badge bg-warning">PENDING</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <p class="mb-1"><strong>Offered Price:</strong></p>
+                                                <p class="text-success font-weight-bold h5">$@offer.OfferedPrice.ToString("F2")</p>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <p class="mb-1"><strong>Price Difference:</strong></p>
+                                                @{
+                                                    var priceDiff = listing.Price - offer.OfferedPrice;
+                                                    var percentDiff = (priceDiff / listing.Price) * 100;
+                                                }
+                                                <p class="@(priceDiff >= 0 ? "text-danger" : "text-success") font-weight-bold">
+                                                    @(priceDiff >= 0 ? "-" : "+")$@Math.Abs(priceDiff).ToString("F2") (@Math.Abs(percentDiff).ToString("F1")%)
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        @if (!string.IsNullOrEmpty(offer.Message))
+                                        {
+                                            <div class="alert alert-light mb-3">
+                                                <p class="mb-0"><strong>Buyer's Message:</strong></p>
+                                                <p class="mb-0">@offer.Message</p>
+                                            </div>
+                                        }
+
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <p class="text-muted"><small><strong>Buyer:</strong> @offer.Buyer.Email</small></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-light">
+                                        <div class="btn-group w-100" role="group">
+                                            <button class="btn btn-success" @onclick="() => AcceptOffer(offer.Offer_ID)" disabled="@(processingOfferId == offer.Offer_ID)">
+                                                @if (processingOfferId == offer.Offer_ID && isAccepting)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                }
+                                                <span>Accept Offer</span>
+                                            </button>
+                                            <button class="btn btn-danger" @onclick="() => RejectOffer(offer.Offer_ID)" disabled="@(processingOfferId == offer.Offer_ID)">
+                                                @if (processingOfferId == offer.Offer_ID && !isAccepting)
+                                                {
+                                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                }
+                                                <span>Reject Offer</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Accepted Offers -->
+                    @if (GetAcceptedOffers().Count > 0)
+                    {
+                        <div class="mb-4">
+                            <h5 class="text-success mb-3">
+                                <span class="badge bg-success">@GetAcceptedOffers().Count</span> Accepted Offers
+                            </h5>
+
+                            @foreach (var offer in GetAcceptedOffers())
+                            {
+                                <div class="card mb-3 border-success">
+                                    <div class="card-header bg-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <h6 class="mb-0">Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6>
+                                                <small class="text-muted">Accepted on @offer.DateResponded?.ToString("MMM dd, yyyy HH:mm")</small>
+                                            </div>
+                                            <div class="col-md-6 text-end">
+                                                <span class="badge bg-success">ACCEPTED</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>Agreed Price:</strong></p>
+                                        <p class="text-success font-weight-bold h5">$@offer.OfferedPrice.ToString("F2")</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Rejected Offers -->
+                    @if (GetRejectedOffers().Count > 0)
+                    {
+                        <div class="mb-4">
+                            <h5 class="text-danger mb-3">
+                                <span class="badge bg-danger">@GetRejectedOffers().Count</span> Rejected Offers
+                            </h5>
+
+                            @foreach (var offer in GetRejectedOffers())
+                            {
+                                <div class="card mb-3 border-danger">
+                                    <div class="card-header bg-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6">
+                                                <h6 class="mb-0">Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6>
+                                                <small class="text-muted">Rejected on @offer.DateResponded?.ToString("MMM dd, yyyy HH:mm")</small>
+                                            </div>
+                                            <div class="col-md-6 text-end">
+                                                <span class="badge bg-danger">REJECTED</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <p class="mb-1"><strong>Offered Price:</strong></p>
+                                        <p class="text-muted">$@offer.OfferedPrice.ToString("F2")</p>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                }
+
+                <div class="mt-4">
+                    <button class="btn btn-secondary" @onclick="GoBack">Back to Listings</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int ListingId { get; set; }
+
+    private ListingAd listing;
+    private List<Offer> offers;
+    
+    private string errorMessage = string.Empty;
+    private string successMessage = string.Empty;
+    private bool loading = true;
+    private bool processingOffer = false;
+    private int processingOfferId = 0;
+    private bool isAccepting = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Check if user is logged in and is a seller
+            if (session?.CurrentUser == null || !session.IsSeller)
+            {
+                NavManager.NavigateTo("/dashboard");
+                return;
+            }
+
+            // Load listing
+            listing = await ListingService.GetListingAsync(ListingId);
+
+            // Verify ownership
+            if (listing == null || listing.User_ID != session.CurrentUser.Id)
+            {
+                errorMessage = "Listing not found or you don't have permission to view it.";
+                loading = false;
+                return;
+            }
+
+            // Load offers
+            await LoadOffers();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading page: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private async Task LoadOffers()
+    {
+        try
+        {
+            offers = await OfferService.GetListingOffersAsync(ListingId);
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading offers: {ex.Message}";
+        }
+    }
+
+    private async Task AcceptOffer(int offerId)
+    {
+        try
+        {
+            processingOfferId = offerId;
+            isAccepting = true;
+            errorMessage = string.Empty;
+            successMessage = string.Empty;
+
+            var offer = offers.FirstOrDefault(o => o.Offer_ID == offerId);
+            if (offer == null)
+            {
+                errorMessage = "Offer not found";
+                return;
+            }
+
+            // Reject all other pending offers for this listing
+            var otherPendingOffers = offers.Where(o => o.Status == "Pending" && o.Offer_ID != offerId).ToList();
+            foreach (var otherOffer in otherPendingOffers)
+            {
+                await OfferService.UpdateOfferStatusAsync(otherOffer.Offer_ID, "Rejected");
+            }
+
+            // Accept this offer
+            await OfferService.UpdateOfferStatusAsync(offerId, "Accepted");
+
+            // Create transaction
+            var transaction = new Transaction
+            {
+                Offer_Id = offerId,
+                Buyer_Id = offer.Buyer_ID,
+                Seller_Id = offer.Seller_ID,
+                Transaction_Amount = offer.OfferedPrice,
+                Payment_Method = "To Be Arranged",
+                Status = "Pending"
+            };
+
+            await TransactionService.CreateTransactionAsync(transaction);
+
+            successMessage = "Offer accepted! Transaction created.";
+            await LoadOffers();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error accepting offer: {ex.Message}";
+        }
+        finally
+        {
+            processingOfferId = 0;
+            isAccepting = false;
+        }
+    }
+
+    private async Task RejectOffer(int offerId)
+    {
+        try
+        {
+            processingOfferId = offerId;
+            isAccepting = false;
+            errorMessage = string.Empty;
+            successMessage = string.Empty;
+
+            await OfferService.UpdateOfferStatusAsync(offerId, "Rejected");
+
+            successMessage = "Offer rejected.";
+            await LoadOffers();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error rejecting offer: {ex.Message}";
+        }
+        finally
+        {
+            processingOfferId = 0;
+        }
+    }
+
+    private void GoBack()
+    {
+        NavManager.NavigateTo("/managelistings");
+    }
+
+    private List<Offer> GetPendingOffers() => offers?.Where(o => o.Status == "Pending").ToList() ?? new List<Offer>();
+    private List<Offer> GetAcceptedOffers() => offers?.Where(o => o.Status == "Accepted").ToList() ?? new List<Offer>();
+    private List<Offer> GetRejectedOffers() => offers?.Where(o => o.Status == "Rejected").ToList() ?? new List<Offer>();
+}
