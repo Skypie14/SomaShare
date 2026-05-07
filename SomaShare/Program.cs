@@ -90,9 +90,6 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
 });
 
-// Register UserSession again (duplicate registration - can be removed)
-builder.Services.AddScoped<UserSession>();
-
 var app = builder.Build();
 
 
@@ -118,10 +115,11 @@ app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
-app.Run();
-
+// Seed roles before running the application
 using (var scope = app.Services.CreateScope())
 {
     var roleSeeder = scope.ServiceProvider.GetRequiredService<RoleSeederService>();
     await roleSeeder.SeedRolesAsync(); // Creates Admin, Seller, Buyer roles if they don't exist
 }
+
+app.Run();

@@ -54,7 +54,6 @@
         {
             session.CurrentUser = user; // store logged-in user
             session.CurrentUserId = user.User_Id;
-            session.CurrentUserRoleId = user.Role_ID;
 
             // Fetch and store the user's role
             var roles = new[] { "Admin", "Seller", "Buyer" };
@@ -64,7 +63,7 @@
                 if (userRole)
                 {
                     session.CurrentUserRole = roleName;
-                    
+
                     break;
                 }
             }
