@@ -3,183 +3,157 @@
 @using SomaShare.Components.Model
 @using SomaShare.Services
 @using Microsoft.AspNetCore.Components
+@using Microsoft.EntityFrameworkCore
 
 @inject IListingService ListingService
+@inject SomaContext Context
 @inject NavigationManager NavManager
 @inject UserSession session
+@inject ISearchService SearchService
 
-<PageTitle>Manage Listings - SomaShare</PageTitle>
+<PageTitle>Browse Listings - SomaShare</PageTitle>
 
+<div>
+    <h2>Textbook Listings</h2>
+    <p>Browse textbooks for sale from other students on campus!</p>
 
-    
+    <div>
         <div>
-            <h2>My Listings</h2>
+            <h5>Search & Filter</h5>
         </div>
-        <div>
-            <button  @onclick="CreateNewListing">
-                 Create New Listing
-            </button>
-        </div>
-
-
-    @if (!string.IsNullOrEmpty(errorMessage))
-    {
-        <div role="alert">
-            @errorMessage
-            <button type="button" @onclick="() => errorMessage = null"></button>
-        </div>
-    }
-
-    @if (!string.IsNullOrEmpty(successMessage))
-    {
-        <div role="alert">
-            @successMessage
-            <button type="button" @onclick="() => successMessage = null"></button>
-        </div>
-    }
-
-    @if (loading)
-    {
- 
-    }
-    else if (listings == null || listings.Count == 0)
-    {
-        <div role="alert">
-            <h4>No Listings Yet</h4>
-            <p>You don't have any listings yet. Click the button above to create your first listing!</p>
-            <button class="btn btn-primary" @onclick="CreateNewListing">Create Listing</button>
-        </div>
-    }}
-    else
-    {
-        @foreach (var listing in listings)
-            {
-             <div>
-              <h5>@listing.Textbook.Title</h5>
-               <p>by @listing.Textbook.Author</p>
-               </div>
+        <div class="card-body">
             <div>
-                 @if (!string.IsNullOrEmpty(listing.Textbook.ISBN))
+                <label>Book Title or Author</label>
+                <input type="text" id="searchTitle" placeholder="Search..." @bind="searchTitle" @bind:event="oninput" />
+            </div>
+            <div>
+                <label for="genre">Genre</label>
+                <select id="genre" @bind="selectedGenre">
+                    <option value="">All Genres</option>
+                    @foreach (var genre in genres)
                     {
-                    <p> <strong>ISBN:</strong> @listing.Textbook.ISBN </p>
-                 }
-                 @if (!string.IsNullOrEmpty(listing.Textbook.Version))
-                   {
-                    <p> <strong>Edition:</strong> @listing.Textbook.Version </p>
+                        <option value="@genre.Genre_ID">@genre.Genre_Name</option>
                     }
-
-                    <p> <strong>Condition:</strong> @listing.Condition </p>
-
-                @if (!string.IsNullOrEmpty(listing.CampusLocation))
-                   {
-                  <p> <strong>Location:</strong> @listing.CampusLocation </p>
-                   }
-            
-                   <p><strong>Posted:</strong> @listing.Date_Posted.ToString("MMM dd, yyyy") </p>
-
-                    @if (listing.Date_Updated.HasValue)
-                     {
-                   <p> <strong>Updated:</strong> @listing.Date_Updated.Value.ToString("MMM dd, yyyy") </p>
-                   }
-           </div>
-
-           <div >
-            <h4>$@listing.Price.ToString("F2")</h4>
-           </div>
-
-              @if (listing.Offers != null && listing.Offers.Count > 0)
-                {
-                 <div>
-                  <p><strong>@listing.Offers.Count</strong> offer@(listing.Offers.Count != 1 ? "s" : "")</p>
-                  </div>
-        }
-
-        @if (!string.IsNullOrEmpty(listing.Description))
-        {
-            <p>
-                @if (listing.Description.Length > 100)
-                {
-                  <text>@listing.Description.Substring(0, 100)...</text>
-                }
-                else
-                {
-                  <text>@listing.Description</text>
-                }
-            </p>
-        }
-
-    <div >
-        
-            <button @onclick="() => EditListing(listing.ListingAd_ID)">
-                Edit
-            </button>
-            <button @onclick="() => DeleteListing(listing.ListingAd_ID)">
-                 Delete
-            </button>
-            @if (listing.Offers != null && listing.Offers.Count > 0)
-            {
-                <button @onclick="() => ViewOffers(listing.ListingAd_ID)"> Offers </button>
-            }
-    </div>
-    
-
-        @if (showDeleteConfirm)
-        {
-            <div >
-                <div >
-                    <h5>Delete Listing</h5>
-                    <button type="button"  @onclick="() => showDeleteConfirm = false"></button>
-                </div>
-                <div >
-                    <p>Are you sure you want to delete this listing?</p>
-                    <p>This action cannot be undone.</p>
-                </div>
-                <div >
-                    <button type="button" @onclick="() => showDeleteConfirm = false">Cancel</button>
-                    <button type="button" @onclick="ConfirmDelete" disabled="@isDeleting">
-                        @if (isDeleting)
-                        {
-                            
-                        }
-                        else
-                        {
-                            <span>Delete</span>
-                        }
-                    </button>
+                </select>
+            </div>
+            <div>
+                <label>&nbsp;</label>
+                <div>
+                    <button class="btn btn-primary" @onclick="Search"> Search </button>
+                    <button class="btn btn-secondary" @onclick="ClearFilters">Clear</button>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+
+@if (loading)
+{
+    <p>Loading listings...</p>
+}
+else if (listings == null || listings.Count == 0)
+{
+    <div>
+        <h4>No Listings Found</h4>
+        <p>There are currently no listings matching your search.</p>
+    </div>
+}
+else
+{
+    <div>
+        @foreach (var listing in listings)
+        {
+            <div>
+                <h5>@listing.Textbook.Title</h5>
+                <p>by @listing.Textbook.Author</p>
+            </div>
+
+            <div class="card-body">
+                <div>
+                    @if (!string.IsNullOrEmpty(listing.Textbook.ISBN))
+                    {
+                        <p><strong>ISBN:</strong> @listing.Textbook.ISBN</p>
+                    }
+
+                    @if (!string.IsNullOrEmpty(listing.Textbook.Version))
+                    {
+                        <p>
+                            <strong>Edition:</strong> @listing.Textbook.Version
+                        </p>
+                    }
+
+                    <p><strong>Genre:</strong> @listing.Genre?.Genre_Name</p>
+
+                    <p><strong>Condition:</strong> @listing.Condition</p>
+
+                    <p><strong>Price:</strong> $@listing.Price.ToString("F2")</p>
+
+                    <p><strong>Posted:</strong> @listing.Date_Posted.ToString("MMM dd, yyyy")</p>
+                </div>
+
+                <div>
+                    <p><strong>Seller:</strong> @listing.User?.First_Name @listing.User?.Last_Name</p>
+                </div>
+
+                @if (!string.IsNullOrEmpty(listing.CampusLocation))
+                {
+                    <div>
+                        <p><strong>Campus Location:</strong> @listing.CampusLocation</p>
+                    </div>
+                }
+
+                @if (!string.IsNullOrEmpty(listing.Description))
+                {
+                    <div>
+                        <p><strong>Details:</strong></p>
+                        <p>
+                            @if (listing.Description.Length > 100)
+                            {
+                                <text>@listing.Description.Substring(0, 100)...</text>
+                            }
+                            else
+                            {
+                                <text>@listing.Description</text>
+                            }
+                        </p>
+                    </div>
+                }
+
+                <div>
+                    <button class="btn btn-success" @onclick="() => MakeOffer(listing)">Make Offer</button>
+                </div>
+            </div>
+        }
+    </div>
 }
 
 @code {
-    //list of user listings
     private List<ListingAd> listings;
-    //msgs for UI feedback
-    private string errorMessage = string.Empty;
-    private string successMessage = string.Empty;
-    //ui state flags
+    private List<Genre> genres = new();
+    private string searchTitle = string.Empty;
+    private string selectedGenre = string.Empty;
     private bool loading = true;
-    private bool isDeleting = false;
-    private bool showDeleteConfirm = false;
-    //stores id of listing to delete
-    private int listingToDeleteId = 0;
 
-    
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            if (session?.CurrentUser == null || !session.IsSeller)
+            // Check if user is logged in
+            if (session?.CurrentUser == null)
             {
-                NavManager.NavigateTo("/dashboard");
-               return;
+                NavManager.NavigateTo("/");
+                return;
             }
 
-            // Load user's listings
+            // Load genres
+            genres = await Context.Genres.ToListAsync();
+
+            // Load all active listings
             await LoadListings();
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error loading listings: {ex.Message}";
+            // Handle error silently for now
         }
         finally
         {
@@ -187,70 +161,45 @@
         }
     }
 
-    //fetch listing from service
     private async Task LoadListings()
     {
         try
         {
-            listings = await ListingService.GetUserListingsAsync(session.CurrentUser.Id);
+            listings = await ListingService.GetActiveBrowseableListingsAsync(session.CurrentUser.Id);
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error retrieving listings: {ex.Message}";
+            // Handle error
         }
     }
 
-    // nav create listing page
-    private void CreateNewListing()
-    {
-        NavManager.NavigateTo("/create-listings");
-    }
-
-    // nav edit page
-    private void EditListing(int listingId)
-    {
-        NavManager.NavigateTo($"/edit-listing/{listingId}");
-    }
-
-    // nav offers page
-    private void ViewOffers(int listingId)
-    {
-        // This will navigate to offers page when created
-        NavManager.NavigateTo($"/offers/{listingId}");
-    }
-
-    // trigger delete confirmation
-    private void DeleteListing(int listingId)
-    {
-        listingToDeleteId = listingId;
-        showDeleteConfirm = true;
-    }
-
-    // confirm and delete listing
-    private async Task ConfirmDelete()
+    private async Task Search()
     {
         try
         {
-            isDeleting = true;
-            errorMessage = string.Empty;
-
-            //call service to delete
-            await ListingService.DeleteListingAsync(listingToDeleteId);
-
-            successMessage = "Listing deleted successfully!";
-            showDeleteConfirm = false;
-
-            // Reload listings
-            await LoadListings();
+            if (!string.IsNullOrWhiteSpace(searchTitle) || !string.IsNullOrWhiteSpace(selectedGenre))
+            {
+                listings = await ListingService.GetFilteredListingsAsync(searchTitle, selectedGenre, session.CurrentUser.Id);
+            }
+            else
+            {
+                await LoadListings();
+            }
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error deleting listing: {ex.Message}";
-        }
-        finally
-        {
-            isDeleting = false;
+            // Handle error
         }
     }
+
+    private void ClearFilters()
+    {
+        searchTitle = string.Empty;
+        selectedGenre = string.Empty;
     }
-} 
+
+    private void MakeOffer(ListingAd listing)
+    {
+        NavManager.NavigateTo($"/make-offer/{listing.ListingAd_ID}");
+    }
+}

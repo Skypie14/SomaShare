@@ -9,6 +9,8 @@
 @inject SomaContext Context
 @inject NavigationManager NavManager
 @inject UserSession session
+@inject IListingService ListingService
+@inject ISearchService SearchService
 
 <PageTitle>Browse Wanted Ads - SomaShare</PageTitle>
 
@@ -121,11 +123,6 @@
                             }
                         </div>
 
-                        <div >
-                            <div >
-                                <button @onclick="() => ContactBuyer(wantedAd)">  Contact Buyer </button>
-                            </div>
-                        </div>
             }
         </div>
     }
@@ -201,10 +198,4 @@
         selectedGenre = string.Empty;
     }
 
-    private void ContactBuyer(WantedAd wantedAd)
-    {
-        // Navigate to contact/messaging page when created
-        // For now, navigate to chat
-        NavManager.NavigateTo($"/chat");
-    }
-}
+ }

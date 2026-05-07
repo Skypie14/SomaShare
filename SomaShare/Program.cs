@@ -30,6 +30,9 @@ builder.Services.AddScoped<IDbContextFactory<SomaContext>>(provider =>
 // Register custom application services
 builder.Services.AddScoped<IListingService, ListingService>();
 builder.Services.AddScoped<ISearchService, SearchService>();
+builder.Services.AddScoped<IWantedAdService, WantedAdService>();
+builder.Services.AddScoped<IOfferService, OfferService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
 
 // Add SignalR for real-time communication (chat)
 builder.Services.AddSignalR();
