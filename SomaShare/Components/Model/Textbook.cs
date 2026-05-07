@@ -8,10 +8,12 @@ namespace SomaShare.Components.Model
         [Key]
         public int Textbook_ID { get; set; }
 
-        [Required(ErrorMessage = "Title is required")] [StringLength(200, ErrorMessage = "Do not exceed 200 characters")]
+        [Required(ErrorMessage = "Title is required")]
+        [StringLength(200, ErrorMessage = "Do not exceed 200 characters")]
         public string Title { get; set; }
 
-        [Required(ErrorMessage = "Author is required")] [StringLength(100, ErrorMessage = "Do not exceed 100 characters")]
+        [Required(ErrorMessage = "Author is required")]
+        [StringLength(100, ErrorMessage = "Do not exceed 100 characters")]
         public string Author { get; set; }
 
         [StringLength(20, ErrorMessage = "Do not exceed 20 characters")]

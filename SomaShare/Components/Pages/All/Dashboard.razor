@@ -1,83 +1,90 @@
-﻿@page "/Dashboard"
-@rendermode InteractiveServer
-@using SomaShare.Components.Model
+﻿@page "/dashboard"
 @using SomaShare.Services
-@using Microsoft.AspNetCore.Components
-@using Microsoft.EntityFrameworkCore
-@inject UserSession session
+@using SomaShare.Components.Model
 
-@inject NavigationManager Navigation
+@inject IListingService ListingService
+@inject IWantedAdService WantedAdService
+@inject ITransactionService TransactionService
+@inject IReviewService ReviewService
+@inject UserSession UserSession
 
-<h3>Welcome to the Dashboard</h3>
-    
-@if (session.CurrentUserRoleId == 1)
-{
-    <button @onclick="GoToBrowseWants">Browse Wants</button>
-    <button @onclick="GoToCreateListing">Create Listing</button>
-    <button @onclick="GoToManageListing">Manage Listing</button>
-    <button @onclick="GoToOffers">View Offers</button>
-}
-else if (session.CurrentUserRoleId == 2)
-{
-    <button @onclick="GoToBrowseListings">Browse Listings</button>
-    <button @onclick="GoToCreateWants">Create Wants</button>
-    <button @onclick="GoToManageWants">Manage Wants</button>
-    <button @onclick="GoToOffers">View Offers</button>
-}
-else if (session.CurrentUserRoleId == 3)
-{
-    <button @onclick="GoToBrowseWants">Browse Wants</button>
-    <button @onclick="GoToCreateListing">Create Listing</button>
-    <button @onclick="GoToManageListing">Manage Listing</button>
-    <button @onclick="GoToOffers">View Offers</button>
-    <button @onclick="GoToBrowseListings">Browse Listings</button>
-    <button @onclick="GoToCreateWants">Create Wants</button>
-    <button @onclick="GoToManageWants">Manage Wants</button>
-    <button @onclick="GoToOffers">View Offers</button>
-}
-else if (session.CurrentUser != null){
-    <p> Smth wrong</p>
-}
-else
-{
-    Navigation.NavigateTo("/");
-}
+<h3>Dashboard</h3>
+
+<!-- Create Listing -->
+<div class="card p-3 mb-4">
+    <h4>Create a Listing</h4>
+    <EditForm Model="@newListing" OnValidSubmit="CreateListing">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <InputText @bind-Value="newListing.Textbook.Title" placeholder="Title" />
+        <InputText @bind-Value="newListing.Textbook.Author" placeholder="Author" />
+        <InputNumber @bind-Value="newListing.Price" placeholder="Price" />
+
+        <button type="submit" class="btn btn-primary">Create Listing</button>
+    </EditForm>
+</div>
+
+<!-- Create Wanted Ad -->
+<div class="card p-3 mb-4">
+    <h4>Create a Wanted Ad</h4>
+    <EditForm Model="@newWantedAd" OnValidSubmit="CreateWantedAd">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <InputText @bind-Value="newWantedAd.Textbook.Title" placeholder="Title" />
+        <InputText @bind-Value="newWantedAd.Textbook.Author" placeholder="Author" />
+        <InputNumber @bind-Value="newWantedAd.MaxPrice" placeholder="Max Price" />
+
+        <button type="submit" class="btn btn-success">Create Wanted Ad</button>
+    </EditForm>
+</div>
+
+<!-- Trust Score -->
+<div class="card p-3 mb-4">
+    <h4>Community Trust</h4>
+    <p>Your average rating: @averageRating</p>
+</div>
+
+<!-- Pending Transactions -->
+<div class="card p-3 mb-4">
+    <h4>Pending Transactions</h4>
+    <ul>
+        @foreach (var t in pendingTransactions)
+        {
+            <li>@t.Offer.ListingAd.Textbook.Title - Status: @t.Status</li>
+        }
+    </ul>
+</div>
 
 @code {
+    private ListingAd newListing = new ListingAd { Textbook = new Textbook() };
+    private WantedAd newWantedAd = new WantedAd { Textbook = new Textbook() };
 
-    private void GoToBrowseWants()
+    private double averageRating;
+    private List<Transaction> pendingTransactions = new();
+
+    protected override async Task OnInitializedAsync()
     {
-        Navigation.NavigateTo("/browsewants");
+        // Load trust score
+        averageRating = await ReviewService.GetAverageRatingAsync(UserSession.UserId);
+
+
+        // Load pending transactions
+        pendingTransactions = await TransactionService.GetPendingTransactionsAsync(UserSession.UserId);
     }
 
-    private void GoToCreateListing()
+    private async Task CreateListing()
     {
-        Navigation.NavigateTo("/createlisting");
+        newListing.User_ID = UserSession.UserId;
+        await ListingService.CreateListingAsync(newListing.Textbook, newListing);
+        newListing = new ListingAd { Textbook = new Textbook() }; // reset form
     }
 
-    private void GoToManageListing()
+    private async Task CreateWantedAd()
     {
-        Navigation.NavigateTo("/managelisting");
+        newWantedAd.User_ID = UserSession.UserId;
+        await WantedAdService.CreateWantedAdAsync(newWantedAd.Textbook, newWantedAd);
+        newWantedAd = new WantedAd { Textbook = new Textbook() }; // reset form
     }
-
-    private void GoToOffers()
-    {
-        Navigation.NavigateTo("/offers");
-    }
-
-    private void GoToBrowseListings()
-    {
-        Navigation.NavigateTo("/browselistings");
-    }
-
-    private void GoToCreateWants()
-    {
-        Navigation.NavigateTo("/createwants");
-    }
-
-    private void GoToManageWants()
-    {
-        Navigation.NavigateTo("/managewants");
-    }
-
 }

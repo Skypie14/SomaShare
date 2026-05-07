@@ -5,6 +5,8 @@ namespace SomaShare.Services
 {
     public interface IReviewService
     {
+        Task<double> GetAverageRatingAsync(string userId);
+
         Task<Review?> GetReviewAsync(int reviewId);
         Task<List<Review>> GetReviewsForUserAsync(string userId);
         Task<List<Review>> GetReviewsByReviewerAsync(string reviewerId);
@@ -95,5 +97,18 @@ namespace SomaShare.Services
 
             return (decimal)reviews.Average(r => r.Rating);
         }
+
+        public async Task<double> GetAverageRatingAsync(string userId)
+        {
+            var reviews = await _context.Reviews
+                .Where(r => r.Reviewee_ID == userId)
+                .ToListAsync();
+
+            if (reviews.Count == 0)
+                return 0; // no reviews yet
+
+            return reviews.Average(r => r.Rating);
+        }
+
     }
 }

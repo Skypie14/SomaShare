@@ -119,3 +119,9 @@ app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 
 app.Run();
+
+using (var scope = app.Services.CreateScope())
+{
+    var roleSeeder = scope.ServiceProvider.GetRequiredService<RoleSeederService>();
+    await roleSeeder.SeedRolesAsync(); // Creates Admin, Seller, Buyer roles if they don't exist
+}
