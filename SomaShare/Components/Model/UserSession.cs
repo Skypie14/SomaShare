@@ -13,7 +13,7 @@
         public int? CurrentUserId { get; set; }
 
         // Store the current user's role
-        public string? CurrentUserRole { get; set; }
+        public string? CurrentUserRole { get; set; } = string.Empty;
 
         public bool IsSeller => CurrentUserRole == "Seller";
         public bool IsBuyer => CurrentUserRole == "Buyer";

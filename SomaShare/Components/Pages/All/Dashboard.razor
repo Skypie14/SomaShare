@@ -7,47 +7,33 @@
 @inject ITransactionService TransactionService
 @inject IReviewService ReviewService
 @inject UserSession UserSession
+@inject NavigationManager NavManager
+<link rel="stylesheet" href="~/Dashboard.css" />
+
 
 <h3>Dashboard</h3>
 
+
 <!-- Create Listing -->
 <div class="card p-3 mb-4">
-    <h4>Create a Listing</h4>
-    <EditForm Model="@newListing" FormName="CreateListingForm" OnValidSubmit="CreateListing">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <InputText @bind-Value="newListing.Textbook.Title" placeholder="Title" />
-        <InputText @bind-Value="newListing.Textbook.Author" placeholder="Author" />
-        <InputNumber @bind-Value="newListing.Price" placeholder="Price" />
-
-        <button type="submit" class="btn btn-primary">Create Listing</button>
-    </EditForm>
+    <h4>Manage Listing</h4>
+    <button onclick="GoToManageListing"> Create Listing </button>
 </div>
 
 <!-- Create Wanted Ad -->
-<div class="card p-3 mb-4">
+<div class="card">
     <h4>Create a Wanted Ad</h4>
-    <EditForm Model="@newWantedAd" OnValidSubmit="CreateWantedAd">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <InputText @bind-Value="newWantedAd.Textbook.Title" placeholder="Title" />
-        <InputText @bind-Value="newWantedAd.Textbook.Author" placeholder="Author" />
-        <InputNumber @bind-Value="newWantedAd.MaxPrice" placeholder="Max Price" />
-
-        <button type="submit" class="btn btn-success">Create Wanted Ad</button>
-    </EditForm>
+    <button onclick="GoToCreateWant"> Create Advertisement </button>
 </div>
 
 <!-- Trust Score -->
-<div class="card p-3 mb-4">
+<div class="card">
     <h4>Community Trust</h4>
     <p>Your average rating: @averageRating</p>
 </div>
 
 <!-- Pending Transactions -->
-<div class="card p-3 mb-4">
+<div class="card">
     <h4>Pending Transactions</h4>
     <ul>
         @foreach (var t in pendingTransactions)
@@ -58,8 +44,6 @@
 </div>
 
 @code {
-    private ListingAd newListing = new ListingAd { Textbook = new Textbook() };
-    private WantedAd newWantedAd = new WantedAd { Textbook = new Textbook() };
 
     private double averageRating;
     private List<Transaction> pendingTransactions = new();
@@ -74,17 +58,13 @@
         pendingTransactions = await TransactionService.GetPendingTransactionsAsync(UserSession.UserId);
     }
 
-    private async Task CreateListing()
+    private async Task GoToCreateListing()
     {
-        newListing.User_ID = UserSession.UserId;
-        await ListingService.CreateListingAsync(newListing.Textbook, newListing);
-        newListing = new ListingAd { Textbook = new Textbook() }; // reset form
+        NavManager.NavigateTo("/listings");
     }
 
-    private async Task CreateWantedAd()
+    private async Task GoToCreateWant()
     {
-        newWantedAd.User_ID = UserSession.UserId;
-        await WantedAdService.CreateWantedAdAsync(newWantedAd.Textbook, newWantedAd);
-        newWantedAd = new WantedAd { Textbook = new Textbook() }; // reset form
+        NavManager.NavigateTo("/wants");
     }
 }

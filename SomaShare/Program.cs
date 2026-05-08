@@ -35,6 +35,8 @@ builder.Services.AddScoped<IWantedAdService, WantedAdService>();
 builder.Services.AddScoped<IOfferService, OfferService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<RoleSeederService>();
+builder.Services.AddScoped<UserSession>();
 
 // Add SignalR for real-time communication (chat)
 builder.Services.AddSignalR();
