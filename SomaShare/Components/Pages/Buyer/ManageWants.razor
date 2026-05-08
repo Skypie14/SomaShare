@@ -139,12 +139,12 @@
           <button type="button" class="btn btn-danger" @onclick="ConfirmDelete" disabled="@isDeleting">
               @if (isDeleting)
               {
-                  <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                  <span>Deleting...</span>
+                  <p class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></p>
+                  <p>Deleting...</p>
               }
               else
               {
-                  <span>Delete</span>
+                  <p>Delete</p>
               }
           </button>
       </div>
@@ -168,10 +168,10 @@
     {
         try
         {
-            // Check if user is logged in and is a buyer
-            if (session?.CurrentUser == null || !session.IsBuyer)
+            // Check if user is logged in
+            if (session?.CurrentUserRoleId == null || session.CurrentUserRoleId != 3 && session.CurrentUserRoleId != 1) // Ensure user is a buyer or Admin
             {
-                NavManager.NavigateTo("/dashboard");
+                NavManager.NavigateTo("/");
                 return;
             }
 

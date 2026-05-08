@@ -62,7 +62,7 @@
                             </div>
                             <div>
                                 <h5>Listing Details</h5>
-                                <p><strong>Asking Price:</strong> <span>$@listing.Price.ToString("F2")</span></p>
+                                <p><strong>Asking Price:</strong> <p>$@listing.Price.ToString("F2")</p></p>
                                 @if (!string.IsNullOrEmpty(listing.CampusLocation))
                                 {
                                     <p><strong>Campus:</strong> @listing.CampusLocation</p>
@@ -116,7 +116,7 @@
                      }
                      else
                      {
-                         <span>Submit Offer</span>
+                         <p>Submit Offer</p>
                      }
                  </button>
              </div>
@@ -147,10 +147,10 @@
     {
         try
         {
-            // Check if user is logged in and is a buyer/redirect
-            if (session?.CurrentUser == null || !session.IsBuyer)
+            // Check if user is logged in
+            if (session?.CurrentUserRoleId == null || session.CurrentUserRoleId != 3 && session.CurrentUserRoleId != 1) // Ensure user is a buyer or Admin
             {
-                NavManager.NavigateTo("/dashboard");
+                NavManager.NavigateTo("/");
                 return;
             }
 

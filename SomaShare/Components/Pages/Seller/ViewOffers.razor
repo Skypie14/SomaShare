@@ -14,43 +14,34 @@
 
 <PageTitle>Manage Offers - SomaShare</PageTitle>
 
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div class="col-md-8 offset-md-2">
-            @if (loading)
-            {
-                <div class="text-center py-5">
-                    <div class="spinner-border" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-3">Loading offers...</p>
-                </div>
-            }
-            else if (listing == null)
-            {
-                <div class="alert alert-danger">
-                    <h4>Listing Not Found</h4>
-                    <p>This listing does not exist or you don't have permission to view it.</p>
-                    <button class="btn btn-primary" @onclick="GoBack">Go Back</button>
-                </div>
-            }
-            else
-            {
-                <!-- Listing Header -->
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">
-                        <h4 class="mb-0">Offers for: @listing.Textbook.Title</h4>
-                    </div>
-                    <div class="card-body">
-                        <p><strong>Author:</strong> @listing.Textbook.Author</p>
-                        <p><strong>Price:</strong> <span class="text-success font-weight-bold">$@listing.Price.ToString("F2")</span></p>
-                        <p><strong>Condition:</strong> @listing.Condition</p>
-                    </div>
+
+    @if (loading)
+    {
+        
+    }
+    else if (listing == null)
+     {
+      <div>
+       <h4>Listing Not Found</h4>
+       <p>This listing does not exist or you don't have permission to view it.</p>
+        <button @onclick="GoBack">Go Back</button>
+      </div>
+      }}
+       else
+          {
+            <!-- Listing Header -->
+            <div>
+                 <h4>Offers for: @listing.Textbook.Title</h4>
+             
+                <div class="card-body">
+                   <p><strong>Author:</strong> @listing.Textbook.Author</p>
+                   <p><strong>Price:</strong> R @listing.Price.ToString("F2")</p>
+                   <p><strong>Condition:</strong> @listing.Condition</p>
                 </div>
 
                 @if (!string.IsNullOrEmpty(errorMessage))
                 {
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <div role="alert">
                         @errorMessage
                         <button type="button" class="btn-close" @onclick="() => errorMessage = null"></button>
                     </div>
@@ -58,7 +49,7 @@
 
                 @if (!string.IsNullOrEmpty(successMessage))
                 {
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <div role="alert">
                         @successMessage
                         <button type="button" class="btn-close" @onclick="() => successMessage = null"></button>
                     </div>
@@ -66,7 +57,7 @@
 
                 @if (offers == null || offers.Count == 0)
                 {
-                    <div class="alert alert-info">
+                    <div>
                         <h5>No Offers Yet</h5>
                         <p>You haven't received any offers for this listing yet.</p>
                     </div>
@@ -76,76 +67,57 @@
                     <!-- Pending Offers -->
                     @if (GetPendingOffers().Count > 0)
                     {
-                        <div class="mb-4">
-                            <h5 class="text-warning mb-3">
-                                <span class="badge bg-warning">@GetPendingOffers().Count</span> Pending Offers
-                            </h5>
+                      <div>
+                            <h5> Pending Offers </h5>
 
                             @foreach (var offer in GetPendingOffers())
                             {
-                                <div class="card mb-3 border-warning">
-                                    <div class="card-header bg-light">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-6">
-                                                <h6 class="mb-0">Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6>
-                                                <small class="text-muted">@offer.DateCreated.ToString("MMM dd, yyyy HH:mm")</small>
-                                            </div>
-                                            <div class="col-md-6 text-end">
-                                                <span class="badge bg-warning">PENDING</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <div class="row mb-3">
-                                            <div class="col-md-6">
-                                                <p class="mb-1"><strong>Offered Price:</strong></p>
-                                                <p class="text-success font-weight-bold h5">$@offer.OfferedPrice.ToString("F2")</p>
-                                            </div>
-                                            <div class="col-md-6">
-                                                <p class="mb-1"><strong>Price Difference:</strong></p>
-                                                @{
-                                                    var priceDiff = listing.Price - offer.OfferedPrice;
-                                                    var percentDiff = (priceDiff / listing.Price) * 100;
-                                                }
-                                                <p class="@(priceDiff >= 0 ? "text-danger" : "text-success") font-weight-bold">
-                                                    @(priceDiff >= 0 ? "-" : "+")$@Math.Abs(priceDiff).ToString("F2") (@Math.Abs(percentDiff).ToString("F1")%)
-                                                </p>
-                                            </div>
-                                        </div>
+                              <div>
+                              <h6> <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6>
+                             <p>@offer.DateCreated.ToString("MMM dd, yyyy HH:mm")</p>
+                              </div>
+                              <div>
+                                <p>PENDING</p>
+                               </div>
 
-                                        @if (!string.IsNullOrEmpty(offer.Message))
-                                        {
-                                            <div class="alert alert-light mb-3">
-                                                <p class="mb-0"><strong>Buyer's Message:</strong></p>
-                                                <p class="mb-0">@offer.Message</p>
-                                            </div>
-                                        }
-
-                                        <div class="row">
-                                            <div class="col-md-6">
-                                                <p class="text-muted"><small><strong>Buyer:</strong> @offer.Buyer.Email</small></p>
-                                            </div>
+                              <div class="card">
+                                 <div>
+                                     <p> <strong>Offered Price:</strong></p>
+                                     <p> $@offer.OfferedPrice.ToString("F2")</p>
+                                  </div>
+                                  
+                                  <div>
+                                      <p> <strong>Price Difference:</strong></p>
+                                      @{
+                                          var priceDiff = listing.Price - offer.OfferedPrice;
+                                          var percentDiff = (priceDiff / listing.Price) * 100;
+                                       }
+                                        <p> @(priceDiff >= 0 ? "-" : "+")$@Math.Abs(priceDiff).ToString("F2") (@Math.Abs(percentDiff).ToString("F1")%) </p>
+                                  </div>
                                         </div>
+                                        
+                                 @if (!string.IsNullOrEmpty(offer.Message))
+                                  {
+                                    <div> 
+                                      <p><strong>Buyer's Message:</strong></p> 
+                                      <p>@offer.Message</p>
                                     </div>
-                                    <div class="card-footer bg-light">
-                                        <div class="btn-group w-100" role="group">
-                                            <button class="btn btn-success" @onclick="() => AcceptOffer(offer.Offer_ID)" disabled="@(processingOfferId == offer.Offer_ID)">
-                                                @if (processingOfferId == offer.Offer_ID && isAccepting)
-                                                {
-                                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                }
-                                                <span>Accept Offer</span>
+                                   }
+                                   <div>
+                                        <div>
+                                          <p><strong>Buyer:</strong> @offer.Buyer.Email</p>
+                                        </div>
+                                   </div>
+
+                                  <div>
+                                      <button @onclick="() => AcceptOffer(offer.Offer_ID)" disabled="@(processingOfferId == offer.Offer_ID)">
+                                           <p>Accept Offer</p>
                                             </button>
-                                            <button class="btn btn-danger" @onclick="() => RejectOffer(offer.Offer_ID)" disabled="@(processingOfferId == offer.Offer_ID)">
-                                                @if (processingOfferId == offer.Offer_ID && !isAccepting)
-                                                {
-                                                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                                                }
-                                                <span>Reject Offer</span>
+
+                                      <button @onclick="() => RejectOffer(offer.Offer_ID)" disabled="@(processingOfferId == offer.Offer_ID)">
+                                         <span>Reject Offer</span>
                                             </button>
                                         </div>
-                                    </div>
-                                </div>
                             }
                         </div>
                     }
@@ -153,30 +125,20 @@
                     <!-- Accepted Offers -->
                     @if (GetAcceptedOffers().Count > 0)
                     {
-                        <div class="mb-4">
-                            <h5 class="text-success mb-3">
-                                <span class="badge bg-success">@GetAcceptedOffers().Count</span> Accepted Offers
-                            </h5>
+                        <div >
+                            <h5> Accepted Offers </h5>
 
                             @foreach (var offer in GetAcceptedOffers())
                             {
-                                <div class="card mb-3 border-success">
-                                    <div class="card-header bg-light">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-6">
-                                                <h6 class="mb-0">Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6>
-                                                <small class="text-muted">Accepted on @offer.DateResponded?.ToString("MMM dd, yyyy HH:mm")</small>
-                                            </div>
-                                            <div class="col-md-6 text-end">
-                                                <span class="badge bg-success">ACCEPTED</span>
-                                            </div>
-                                        </div>
+                                <div>
+                                    <h5>Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h5>
+                                       <p>Accepted on @offer.DateResponded?.ToString("MMM dd, yyyy HH:mm")</p>
+                                      
                                     </div>
-                                    <div class="card-body">
-                                        <p class="mb-1"><strong>Agreed Price:</strong></p>
-                                        <p class="text-success font-weight-bold h5">$@offer.OfferedPrice.ToString("F2")</p>
+                                    <div>
+                                        <p> <strong>Agreed Price:</strong></p>
+                                        <p>$@offer.OfferedPrice.ToString("F2")</p>
                                     </div>
-                                </div>
                             }
                         </div>
                     }
@@ -184,42 +146,32 @@
                     <!-- Rejected Offers -->
                     @if (GetRejectedOffers().Count > 0)
                     {
-                        <div class="mb-4">
-                            <h5 class="text-danger mb-3">
-                                <span class="badge bg-danger">@GetRejectedOffers().Count</span> Rejected Offers
-                            </h5>
+               
+                            <h5> @GetRejectedOffers().Count  Rejected Offers </h5>
 
                             @foreach (var offer in GetRejectedOffers())
                             {
-                                <div class="card mb-3 border-danger">
-                                    <div class="card-header bg-light">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-6">
-                                                <h6 class="mb-0">Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6>
-                                                <small class="text-muted">Rejected on @offer.DateResponded?.ToString("MMM dd, yyyy HH:mm")</small>
-                                            </div>
-                                            <div class="col-md-6 text-end">
-                                                <span class="badge bg-danger">REJECTED</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <p class="mb-1"><strong>Offered Price:</strong></p>
-                                        <p class="text-muted">$@offer.OfferedPrice.ToString("F2")</p>
-                                    </div>
-                                </div>
+                                <div>
+                                    <h6>Offer from <strong>@offer.Buyer.First_Name @offer.Buyer.Last_Name</strong></h6> 
+                                    <p>Rejected on @offer.DateResponded?.ToString("MMM dd, yyyy HH:mm")</p>
+                                 </div> 
+                                 <div>
+                                     <p>REJECTED</p>
+                                 </div>
+                                 
+                                 <div>
+                                     <p><strong>Offered Price:</strong></p>
+                                     <p >$@offer.OfferedPrice.ToString("F2")</p>
+                                 </div>
                             }
-                        </div>
                     }
                 }
 
-                <div class="mt-4">
-                    <button class="btn btn-secondary" @onclick="GoBack">Back to Listings</button>
+                <div>
+                    <button @onclick="GoBack">Back to Listings</button>
                 </div>
             }
         </div>
-    </div>
-</div>
 
 @code {
     [Parameter]
@@ -239,10 +191,10 @@
     {
         try
         {
-            // Check if user is logged in and is a seller
-            if (session?.CurrentUser == null || !session.IsSeller)
+            // Check if user is logged in
+            if (session?.CurrentUserRoleId == null || session.CurrentUserRoleId != 2 && session.CurrentUserRoleId != 1) // Ensure user is a seller or Admin
             {
-                NavManager.NavigateTo("/dashboard");
+                NavManager.NavigateTo("/");
                 return;
             }
 

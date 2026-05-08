@@ -139,7 +139,7 @@ else
         try
         {
             // Check if user is logged in
-            if (session?.CurrentUser == null)
+            if (session?.CurrentUserRoleId == null || session.CurrentUserRoleId != 3 || session.CurrentUserRoleId == 1) // Ensure user is a buyer or Admin
             {
                 NavManager.NavigateTo("/");
                 return;
